@@ -18,8 +18,9 @@ hidden_size = 128
 embedding_size = 256
 teacher_forcing_ratio = 1.0
 max_iters = 200
-ref_enc_filters = [32, 32, 64, 128, 256, 512]
-# ref_enc_filters = [32, 32, 64, 64, 128, 128]
+# ref_enc_filters = [32, 32, 64, 128, 256, 512]
+ref_enc_filters = [32, 32, 64, 64, 128, 128]
+z_dim = 16
 
 # Training:
 outputs_per_step = 5

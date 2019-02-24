@@ -20,7 +20,7 @@ def main(args):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # Define model
-    model = Tacotron().to(device)
+    model = nn.DataParallel(Tacotron()).to(device)
     print("Model Have Been Defined")
     
     # Print info

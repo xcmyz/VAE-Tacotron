@@ -180,6 +180,7 @@ class CBHG(nn.Module):
 
         self.gru.flatten_parameters()
         out, _ = self.gru(highway, init_gru)
+        # print(np.shape(out))
 
         return out
 
@@ -248,11 +249,26 @@ class AttentionDecoder(nn.Module):
         batch_size = memory.size()[0]
 
         # Get keys
+        # print(np.shape(memory))
+        # print(np.shape(memory.contiguous().view(-1, self.num_units + hp.z_dim)))
+        ##############################
+        # memory: (batch, seq_length, num_units + z_dim)
+        ##############################
         keys = self.W1(memory.contiguous().view(-1, self.num_units))
+        # print(np.shape(keys))
         keys = keys.view(-1, memory_len, self.num_units)
+        # print(np.shape(keys))
+        ##############################
+        # keys: (batch, seq_length, num_units)
+        ##############################
 
         # Get hidden state (query) passed through GRUcell
+        # print(np.shape(decoder_input))
+        ##############################
+        # decoder_input: (batch, 128)
+        ##############################
         d_t = self.attn_grucell(decoder_input, attn_hidden)
+        # print(np.shape(d_t))
 
         # Duplicate query with same dimension of keys for matrix operation (Speed up)
         d_t_duplicate = self.W2(d_t).unsqueeze(1).expand_as(memory)

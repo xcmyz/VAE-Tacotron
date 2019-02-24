@@ -6,14 +6,14 @@ import random
 
 
 class Encoder(nn.Module):
-    def __init__(self, embedding_size=256):
+    def __init__(self, hidden_size):
         # 第一维是信号所有取值的数量，第二维是想embedding的目标维数
         super(Encoder, self).__init__()
-        self.embedding_size = embedding_size
-        self.embed = nn.Embedding(len(symbols), embedding_size)
+        # print(embedding_size)
+        self.embed = nn.Embedding(len(symbols), hp.embedding_size)
         self.prenet = Prenet(
-            embedding_size, hp.hidden_size * 2, hp.hidden_size)
-        self.cbhg = CBHG(hp.hidden_size)
+            hp.embedding_size, hp.hidden_size * 2, hp.hidden_size)
+        self.cbhg = CBHG(hidden_size // 2)
 
     def forward(self, input_):
         ##############################
@@ -142,32 +142,44 @@ class Tacotron(nn.Module):
 
     def __init__(self):
         super(Tacotron, self).__init__()
-        self.encoder = Encoder(hp.embedding_size)
+        self.encoder = Encoder(hp.embedding_size - hp.z_dim)
         self.vae = VAE()
         self.decoder = MelDecoder()
         self.postnet = PostProcessingNet()
 
-    def copy_z(self, z, copy_size):
-        z_copied = torch.stack(
-            [torch.stack([z[batch] for _ in range(copy_size)]) for batch in range(z.size(0))])
-        # for batch in range(z.size(0)):
-        #     torch.stack([z[batch] for _ in range(copy_size)])
-        # print(z_copied)
-        return z_copied
+    # def copy_z(self, z, copy_size):
+    #     z_copied = torch.stack(
+    #         [torch.stack([z[batch] for _ in range(copy_size)]) for batch in range(z.size(0))])
+    #     # for batch in range(z.size(0)):
+    #     #     torch.stack([z[batch] for _ in range(copy_size)])
+    #     # print(z_copied)
+    #     return z_copied
 
     def forward(self, characters, mel_input):
         # print(np.shape(mel_input))
         z, mu, log_var = self.vae(mel_input)
+        # print(np.shape(mu))
+        # print(np.shape(log_var))
 
         # print(np.shape(mel_input))
         # print(np.shape(z))
         memory = self.encoder.forward(characters)
+        ##############################
+        # memory: (batch, seq_length, 256)
+        ##############################
         # print(np.shape(self.copy_z(z, memory.size(1))))
         # print(np.shape(z))
         # print(np.shape(memory))
-        z = self.copy_z(z, memory.size(1))
+        # z = self.copy_z(z, memory.size(1))
+        z = torch.stack([torch.stack([z[batch] for _ in range(
+            memory.size(1))]) for batch in range(z.size(0))])
         # print(memory)
-        memory = memory + z
+        # memory = memory + z
+        # print(np.shape(memory))
+
+        memory = torch.cat((memory, z), 2)
+
+        # print(np.shape(memory))
         # print(memory)
         # print(z)
         mel_output = self.decoder.forward(mel_input, memory)
