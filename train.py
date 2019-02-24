@@ -20,7 +20,7 @@ def main(args):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # Define model
-    model = nn.DataParallel(Tacotron()).to(device)
+    model = Tacotron().to(device)
     print("Model Have Been Defined")
     
     # Print info
@@ -158,7 +158,7 @@ def main(args):
             # linear_loss = torch.abs(
             #     linear_output - compare(linear_output, specs, device))
             # linear_loss = torch.mean(linear_loss)
-            loss = 2 * mel_loss + 0.5 * linear_loss + kl_div
+            loss = mel_loss + 0.5 * linear_loss + kl_div
             # print(loss)
             # loss = loss.to(device)
             # Loss.append(loss)
