@@ -28,5 +28,6 @@ class VAE_TacotronLoss(nn.Module):
         linear_loss = torch.mean(linear_loss)
 
         kl_div = - 0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+        kl_div = 10 * kl_div
 
         return mel_loss, linear_loss, kl_div
