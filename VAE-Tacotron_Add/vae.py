@@ -35,7 +35,7 @@ class ReferenceEncoder(nn.Module):
         # print(hp.embedding_size // 2)
         # print(hp.embedding_size * 2)
         self.gru = nn.GRU(
-            input_size=hp.ref_enc_filters[-1] * out_channels, hidden_size=hp.embedding_size * 2, batch_first=True)
+            input_size=hp.ref_enc_filters[-1] * out_channels, hidden_size=hp.embedding_size // 2, batch_first=True)
 
     def calculate_channels(self, L, kernel_size, stride, pad, n_convs):
         for i in range(n_convs):
@@ -73,6 +73,11 @@ class ReferenceEncoder(nn.Module):
 
         # print(out.squeeze(0))
         # print(np.shape(out.squeeze(0)))
+        out = torch.tanh(out)
+        # print(np.shape(out))
+        ##############################
+        # out: (batch, 128)
+        ##############################
         return out.squeeze(0)
 
 
@@ -87,14 +92,14 @@ class VAE(nn.Module, ):
     # z: (batch, embedding_size)
     ##############################
 
-    def __init__(self, ref_enc_gru_size=hp.embedding_size * 2, hidden_size=600):
+    def __init__(self, ref_enc_gru_size=hp.embedding_size // 2, hidden_size=256):
         super(VAE, self).__init__()
-        self.embedding = hp.embedding_size
+        self.embedding = hp.z_dim
         self.FC_h = nn.Linear(ref_enc_gru_size, hidden_size)
         self.FC1 = nn.Linear(hidden_size, self.embedding)
         self.FC2 = nn.Linear(hidden_size, self.embedding)
         self.relu = nn.ReLU()
-        self.bn = nn.BatchNorm1d(self.embedding)
+        # self.bn = nn.BatchNorm1d(self.embedding)
 
         self.reference_encoder = ReferenceEncoder()
 
@@ -108,11 +113,21 @@ class VAE(nn.Module, ):
         return mu + eps * std
 
     def forward(self, inputs):
-        intput_ = self.reference_encoder(torch.transpose(inputs, 1, 2))
-        mu, log_var = self.encoder(intput_)
-        z = self.reparameterize(mu, log_var)
-        # print(np.shape(z))
-        z = self.bn(z)
-        # print(z)
-        # print(np.shape(z))
+        if self.training:
+            intput_ = self.reference_encoder(torch.transpose(inputs, 1, 2))
+            mu, log_var = self.encoder(intput_)
+            z = self.reparameterize(mu, log_var)
+            # print(np.shape(z))
+            # z = self.bn(z)
+            # print(z)
+            # print(np.shape(z))
+            # print(z)
+            # print(mu)
+            # print(log_var)
+        else:
+            mu = -1
+            log_var = -1
+            ref_mat = torch.zeros((hp.batch_size, hp.z_dim))
+            z = torch.randn_like(ref_mat)
+
         return z, mu, log_var
