@@ -41,15 +41,15 @@ if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # Define model
-    model = nn.DataParallel(Tacotron()).to(device)
+    model = Tacotron().to(device)
     print("Model Have Been Defined")
 
     # Load checkpoint
     checkpoint = torch.load(os.path.join(
-        hparams.checkpoint_path, 'checkpoint_32000.pth.tar'))
+        hparams.checkpoint_path, 'checkpoint_20500.pth.tar'))
     model.load_state_dict(checkpoint['model'])
     print("Load Done")
 
     text = "I am very happy to see you again."
     wav = synthesizer(model, text, device)
-    audio.save_wav(wav, "test.wav")
+    audio.save_wav(wav, text + ".wav")

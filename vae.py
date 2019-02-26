@@ -113,14 +113,21 @@ class VAE(nn.Module, ):
         return mu + eps * std
 
     def forward(self, inputs):
-        intput_ = self.reference_encoder(torch.transpose(inputs, 1, 2))
-        mu, log_var = self.encoder(intput_)
-        z = self.reparameterize(mu, log_var)
-        # print(np.shape(z))
-        # z = self.bn(z)
-        # print(z)
-        # print(np.shape(z))
-        # print(z)
-        # print(mu)
-        # print(log_var)
+        if self.training:
+            intput_ = self.reference_encoder(torch.transpose(inputs, 1, 2))
+            mu, log_var = self.encoder(intput_)
+            z = self.reparameterize(mu, log_var)
+            # print(np.shape(z))
+            # z = self.bn(z)
+            # print(z)
+            # print(np.shape(z))
+            # print(z)
+            # print(mu)
+            # print(log_var)
+        else:
+            mu = -1
+            log_var = -1
+            ref_mat = torch.zeros((hp.batch_size, hp.z_dim))
+            z = torch.randn_like(ref_mat)
+
         return z, mu, log_var
